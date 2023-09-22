@@ -1,0 +1,39 @@
+{
+  "name": "nodejs2023q2-crud-api",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "start:dev": "nodemon src/index.ts",
+    "start": "webpack serve --open",
+    "prod": "webpack --mode production --config webpack.config.js",
+    "dev": "webpack --mode development --config webpack.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "EvgeniaM6",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "cross-env": "^7.0.3",
+    "eslint-plugin-prettier": "^5.0.0-alpha.2",
+    "json5-loader": "^4.0.1",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "uuid": "^9.0.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "dependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-webpack-plugin": "^4.0.1",
+    "prettier": "^3.0.0",
+    "ts-loader": "^9.4.3",
+    "typescript": "^5.1.3"
+  }
+}
