@@ -1,10 +1,12 @@
 import http from 'http';
 import { TResponse } from '../models';
+import { UserManager } from './UserManager';
 
 export class AppController {
-  dbPath = '../database/users.json';
+  private dbPath = '../database/users.json';
+  private userManager = new UserManager(this.dbPath);
 
-  async getResponseData(request: http.IncomingMessage): Promise<TResponse> {
+  public async getResponseData(request: http.IncomingMessage): Promise<TResponse> {
     const { url, method } = request;
 
     const respForWrongReq = {
@@ -29,15 +31,23 @@ export class AppController {
       return this.getUsers();
     }
 
+    if (isTwoUrlParts && method === 'POST') {
+      return await this.createUser(request);
+    }
+
     return respForWrongReq;
   }
 
-  getUsers(): TResponse {
+  private getUsers(): TResponse {
     const users = require(this.dbPath);
 
     return {
       respStatusCode: 200,
       respData: JSON.stringify(users.usersArray, null, '  ')
     };
+  }
+
+  private async createUser(request: http.IncomingMessage): Promise<TResponse> {
+    return this.userManager.createUser(request);
   }
 }
