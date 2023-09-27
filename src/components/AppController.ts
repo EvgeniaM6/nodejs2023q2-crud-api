@@ -43,6 +43,10 @@ export class AppController {
       return await this.changeUser(urlPartsArr[2], request);
     }
 
+    if (!isTwoUrlParts && method === 'DELETE') {
+      return await this.deleteUser(urlPartsArr[2]);
+    }
+
     return respForWrongReq;
   }
 
@@ -65,5 +69,9 @@ export class AppController {
 
   private async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
     return await this.userManager.changeUser(id, request);
+  }
+
+  private async deleteUser(id: string): Promise<TResponse> {
+    return await this.userManager.deleteUser(id);
   }
 }

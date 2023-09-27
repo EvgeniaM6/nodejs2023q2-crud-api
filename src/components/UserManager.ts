@@ -38,17 +38,7 @@ export class UserManager {
     const users: TUsersDatabase = require(this.dbPath);
     users.usersArray.push(newUserData);
 
-    const databasePath: string = join(__dirname, this.dbPath);
-    
-    try {
-      await writeFile(databasePath, JSON.stringify(users, null, '  '));
-      return {
-        respStatusCode: 201,
-        respData: JSON.stringify(newUserData, null, '  ')
-      };
-    } catch (error) {
-      return this.respWrongUserData;
-    }
+    return await this.rewriteDataBase(users, newUserData, 201);
   }
 
   private checkBodyFields(username: string, age: number, hobbies: string[]): boolean {
@@ -92,7 +82,7 @@ export class UserManager {
     }
 
     const users: TUsersDatabase = require(this.dbPath);
-    const userData = users.usersArray.find((user) => user.id === id);
+    const userData: TUser | undefined = users.usersArray.find((user) => user.id === id);
 
     if (!userData) {
       return {
@@ -108,7 +98,7 @@ export class UserManager {
   }
 
   public async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
-    const userResp = this.getUserById(id);
+    const userResp: TResponse = this.getUserById(id);
     if (userResp.respStatusCode !== 200) {
       return userResp;
     }
@@ -118,9 +108,9 @@ export class UserManager {
     const { username, age, hobbies } = dataObj;
 
     const users: TUsersDatabase = require(this.dbPath);
-    const idxUser = users.usersArray.findIndex((user) => user.id === id);
+    const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
 
-    const userData = users.usersArray[idxUser];
+    const userData: TUser = users.usersArray[idxUser];
     if (username) {
       userData.username = username;
     }
@@ -132,13 +122,34 @@ export class UserManager {
     }
 
     users.usersArray[idxUser] = userData;
+    return await this.rewriteDataBase(users, userData, 200);
+  }
+
+  public async deleteUser(id: string): Promise<TResponse> {
+    const userResp: TResponse = this.getUserById(id);
+    if (userResp.respStatusCode !== 200) {
+      return userResp;
+    }
+
+    const users: TUsersDatabase = require(this.dbPath);
+    const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
+    const [deletedUser] = users.usersArray.splice(idxUser, 1);
+
+    return await this.rewriteDataBase(users, deletedUser, 204);
+  }
+
+  private async rewriteDataBase(
+    users: TUsersDatabase, 
+    respUser: TUser, 
+    successStatusCode: number
+  ): Promise<TResponse> {
     const databasePath: string = join(__dirname, this.dbPath);
 
     try {
       await writeFile(databasePath, JSON.stringify(users, null, '  '));
       return {
-        respStatusCode: 200,
-        respData: JSON.stringify(userData, null, '  ')
+        respStatusCode: successStatusCode,
+        respData: JSON.stringify(respUser, null, '  ')
       };
     } catch (error) {
       return this.respWrongUserData;
