@@ -1,5 +1,6 @@
 import http from 'http';
 import process from 'node:process';
+import 'dotenv/config';
 import { AppController } from './AppController';
 
 export class App {
@@ -7,7 +8,7 @@ export class App {
 
   init(): void {
     const hostname = '127.0.0.1';
-    const port = 4000;
+    const port = Number(process.env.PORT) || 4000;
 
     const server = http.createServer(async (req, res) => {
       const resObj = await this.appController.getResponseData(req);
