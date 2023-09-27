@@ -27,8 +27,7 @@ export class UserManager {
       return this.respWrongUserData;
     }
 
-    const id: string = v4();
-    // TODO: check if uuid is already created
+    const id: string = this.getNewId();
     const newUserData: TUser = { id, username, age, hobbies };
 
     const respObj: TResponse = await this.addUserToDatabase(newUserData);
@@ -70,5 +69,17 @@ export class UserManager {
     }
 
     return true;
+  }
+
+  private getNewId(): string {
+    const users: TUsersDatabase = require(this.dbPath);
+    const { usersArray } = users;
+    let newId: string;
+
+    do {
+      newId = v4();
+    } while (usersArray.some((user) => user.id === newId));
+
+    return newId;
   }
 }
