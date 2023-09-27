@@ -7,10 +7,6 @@ import { getRequestBody } from '../utils';
 
 export class UserManager {
   private dbPath: string;
-  private respWrongUserData = {
-    respStatusCode: 400,
-    respData: 'Error. Request body does not contain required fields'
-  };
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
@@ -24,7 +20,10 @@ export class UserManager {
 
     const isCorrectReq = this.checkBodyFields(username, age, hobbies);
     if (!isCorrectReq) {
-      return this.respWrongUserData;
+      return {
+        respStatusCode: 400,
+        respData: 'Error. Request body does not contain required fields'
+      };
     }
 
     const id: string = this.getNewId();
@@ -152,7 +151,10 @@ export class UserManager {
         respData: JSON.stringify(respUser, null, '  ')
       };
     } catch (error) {
-      return this.respWrongUserData;
+      return {
+        respStatusCode: 500,
+        respData: 'Oops! Something went wrong. Try again'
+      };
     }
   }
 }
