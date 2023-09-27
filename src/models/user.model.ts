@@ -7,3 +7,7 @@ export interface IUserRequest {
 export interface TUser extends IUserRequest {
   id: string;
 }
+
+export type TUsersDatabase = {
+  usersArray: TUser[];
+}

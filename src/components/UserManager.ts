@@ -2,7 +2,8 @@ import http from 'http';
 import { v4 } from 'uuid';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { IUserRequest, TResponse } from '../models';
+import { IUserRequest, TResponse, TUser, TUsersDatabase } from '../models';
+import { getRequestBody } from '../utils';
 
 export class UserManager {
   private dbPath: string;
@@ -16,57 +17,58 @@ export class UserManager {
   }
 
   public async createUser(request: http.IncomingMessage): Promise<TResponse> {
-    const promise: Promise<TResponse> = new Promise((res) => {
-      request.on('data', async (data) => this.addUserToDatabase(data, res))
-    });
+    const body: string = await getRequestBody(request);
 
-    const obj = await promise;
-    return obj;
-  }
-
-  private async addUserToDatabase(
-    data: string,
-    resolveCb: (value: TResponse | PromiseLike<TResponse>) => void
-  ) {
-    const dataObj: IUserRequest = JSON.parse(data);
+    const dataObj: IUserRequest = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
 
-    if (!username || !age || !hobbies) {
-      resolveCb(this.respWrongUserData);
-      return;
+    const isCorrectReq = this.checkBodyFields(username, age, hobbies);
+    if (!isCorrectReq) {
+      return this.respWrongUserData;
     }
 
-    const isUsernameString = typeof username === 'string';
-    const isAgeNumber = typeof age === 'number';
-    const isHobbiesArr = Array.isArray(hobbies);
-    if (!isUsernameString || !isAgeNumber || !isHobbiesArr) {
-      resolveCb(this.respWrongUserData);
-      return;
-    }
-
-    const isArrOfStrings = hobbies.every((hobby) => typeof hobby === 'string');
-    if (!isArrOfStrings) {
-      resolveCb(this.respWrongUserData);
-      return;
-    }
-
-    const id = v4();
+    const id: string = v4();
     // TODO: check if uuid is already created
-    const newUserData = { id, username, age, hobbies };
+    const newUserData: TUser = { id, username, age, hobbies };
 
-    const users = require(this.dbPath);
+    const respObj: TResponse = await this.addUserToDatabase(newUserData);
+    return respObj;
+  }
+
+  private async addUserToDatabase(newUserData: TUser): Promise<TResponse> {
+    const users: TUsersDatabase = require(this.dbPath);
     users.usersArray.push(newUserData);
 
-    const databasePath = join(__dirname, this.dbPath);
+    const databasePath: string = join(__dirname, this.dbPath);
     
     try {
       await writeFile(databasePath, JSON.stringify(users, null, '  '));
-      resolveCb({
+      return {
         respStatusCode: 201,
         respData: JSON.stringify(newUserData, null, '  ')
-      });
+      };
     } catch (error) {
-      resolveCb(this.respWrongUserData);
+      return this.respWrongUserData;
     }
+  }
+
+  private checkBodyFields(username: string, age: number, hobbies: string[]): boolean {
+    if (!username || !age || !hobbies) {
+      return false;
+    }
+
+    const isUsernameString: boolean = typeof username === 'string';
+    const isAgeNumber: boolean = typeof age === 'number';
+    const isHobbiesArr: boolean = Array.isArray(hobbies);
+    if (!isUsernameString || !isAgeNumber || !isHobbiesArr) {
+      return false;
+    }
+
+    const isArrOfStrings: boolean = hobbies.every((hobby) => typeof hobby === 'string');
+    if (!isArrOfStrings) {
+      return false;
+    }
+
+    return true;
   }
 }
