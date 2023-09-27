@@ -39,6 +39,10 @@ export class AppController {
       return await this.createUser(request);
     }
 
+    if (!isTwoUrlParts && method === 'PUT') {
+      return await this.changeUser(urlPartsArr[2], request);
+    }
+
     return respForWrongReq;
   }
 
@@ -54,8 +58,12 @@ export class AppController {
   private async createUser(request: http.IncomingMessage): Promise<TResponse> {
     return await this.userManager.createUser(request);
   }
-
+  
   private getUserById(id: string): TResponse {
     return this.userManager.getUserById(id);
+  }
+
+  private async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
+    return await this.userManager.changeUser(id, request);
   }
 }

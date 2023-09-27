@@ -106,4 +106,42 @@ export class UserManager {
       respData: JSON.stringify(userData, null, '  ')
     };
   }
+
+  public async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
+    const userResp = this.getUserById(id);
+    if (userResp.respStatusCode !== 200) {
+      return userResp;
+    }
+    const body: string = await getRequestBody(request);
+
+    const dataObj: IUserRequest = JSON.parse(body);
+    const { username, age, hobbies } = dataObj;
+
+    const users: TUsersDatabase = require(this.dbPath);
+    const idxUser = users.usersArray.findIndex((user) => user.id === id);
+
+    const userData = users.usersArray[idxUser];
+    if (username) {
+      userData.username = username;
+    }
+    if (age) {
+      userData.age = age;
+    }
+    if (hobbies) {
+      userData.hobbies = hobbies;
+    }
+
+    users.usersArray[idxUser] = userData;
+    const databasePath: string = join(__dirname, this.dbPath);
+
+    try {
+      await writeFile(databasePath, JSON.stringify(users, null, '  '));
+      return {
+        respStatusCode: 200,
+        respData: JSON.stringify(userData, null, '  ')
+      };
+    } catch (error) {
+      return this.respWrongUserData;
+    }
+  }
 }
