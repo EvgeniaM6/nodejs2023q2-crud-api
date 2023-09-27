@@ -1,5 +1,5 @@
 import http from 'http';
-import { v4 } from 'uuid';
+import { v4, validate } from 'uuid';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { IUserRequest, TResponse, TUser, TUsersDatabase } from '../models';
@@ -81,5 +81,29 @@ export class UserManager {
     } while (usersArray.some((user) => user.id === newId));
 
     return newId;
+  }
+
+  public getUserById(id: string): TResponse {
+    if (!validate(id)) {
+      return {
+        respStatusCode: 400,
+        respData: `User id ${id} is invalid`
+      };
+    }
+
+    const users: TUsersDatabase = require(this.dbPath);
+    const userData = users.usersArray.find((user) => user.id === id);
+
+    if (!userData) {
+      return {
+        respStatusCode: 404,
+        respData: `Record with id ${id} doesn't exist`
+      };
+    }
+
+    return {
+      respStatusCode: 200,
+      respData: JSON.stringify(userData, null, '  ')
+    };
   }
 }

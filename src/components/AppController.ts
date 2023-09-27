@@ -31,6 +31,10 @@ export class AppController {
       return this.getUsers();
     }
 
+    if (!isTwoUrlParts && method === 'GET') {
+      return this.getUserById(urlPartsArr[2]);
+    }
+
     if (isTwoUrlParts && method === 'POST') {
       return await this.createUser(request);
     }
@@ -48,6 +52,10 @@ export class AppController {
   }
 
   private async createUser(request: http.IncomingMessage): Promise<TResponse> {
-    return this.userManager.createUser(request);
+    return await this.userManager.createUser(request);
+  }
+
+  private getUserById(id: string): TResponse {
+    return this.userManager.getUserById(id);
   }
 }
