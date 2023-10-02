@@ -1,9 +1,10 @@
 import http from 'http';
 import { TResponse } from '../models';
 import { UserManager } from './UserManager';
+import path from 'path';
 
 export class AppController {
-  private dbPath = '../database/users.json';
+  private dbPath = path.resolve(__dirname, '../database/users.json');
   private userManager = new UserManager(this.dbPath);
 
   public async getResponseData(request: http.IncomingMessage): Promise<TResponse> {
@@ -11,7 +12,7 @@ export class AppController {
 
     const respForWrongReq = {
       respStatusCode: 404,
-      respData: 'Error. Wrong request'
+      respData: 'Error. Wrong request',
     };
 
     if (!url) {
@@ -55,14 +56,14 @@ export class AppController {
 
     return {
       respStatusCode: 200,
-      respData: JSON.stringify(users.usersArray, null, '  ')
+      respData: JSON.stringify(users.usersArray, null, '  '),
     };
   }
 
   private async createUser(request: http.IncomingMessage): Promise<TResponse> {
     return await this.userManager.createUser(request);
   }
-  
+
   private getUserById(id: string): TResponse {
     return this.userManager.getUserById(id);
   }

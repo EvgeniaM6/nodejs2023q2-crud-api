@@ -1,5 +1,5 @@
 import http from 'http';
-import process from 'node:process';
+import process from 'process';
 import 'dotenv/config';
 import { AppController } from './AppController';
 
@@ -17,7 +17,7 @@ export class App {
       res.setHeader('Content-Type', 'text/plain');
       res.end(respData);
     });
-    
+
     server.listen(port, hostname, () => {
       console.log(`Server running at http://${hostname}:${port}/`);
     });
@@ -25,6 +25,5 @@ export class App {
     process.on('SIGINT', () => {
       server.close(() => process.exit());
     });
-
   }
 }

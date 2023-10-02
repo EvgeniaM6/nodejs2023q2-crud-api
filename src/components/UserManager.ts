@@ -1,7 +1,6 @@
 import http from 'http';
 import { v4, validate } from 'uuid';
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { writeFile } from 'fs/promises';
 import { IUserRequest, TResponse, TUser, TUsersDatabase } from '../models';
 import { getRequestBody } from '../utils';
 
@@ -22,7 +21,7 @@ export class UserManager {
     if (!isCorrectReq) {
       return {
         respStatusCode: 400,
-        respData: 'Error. Request body does not contain required fields'
+        respData: 'Error. Request body does not contain required fields',
       };
     }
 
@@ -76,7 +75,7 @@ export class UserManager {
     if (!validate(id)) {
       return {
         respStatusCode: 400,
-        respData: `User id ${id} is invalid`
+        respData: `User id ${id} is invalid`,
       };
     }
 
@@ -86,13 +85,13 @@ export class UserManager {
     if (!userData) {
       return {
         respStatusCode: 404,
-        respData: `Record with id ${id} doesn't exist`
+        respData: `Record with id ${id} doesn't exist`,
       };
     }
 
     return {
       respStatusCode: 200,
-      respData: JSON.stringify(userData, null, '  ')
+      respData: JSON.stringify(userData, null, '  '),
     };
   }
 
@@ -138,22 +137,20 @@ export class UserManager {
   }
 
   private async rewriteDataBase(
-    users: TUsersDatabase, 
-    respUser: TUser, 
+    users: TUsersDatabase,
+    respUser: TUser,
     successStatusCode: number
   ): Promise<TResponse> {
-    const databasePath: string = join(__dirname, this.dbPath);
-
     try {
-      await writeFile(databasePath, JSON.stringify(users, null, '  '));
+      await writeFile(this.dbPath, JSON.stringify(users, null, '  '));
       return {
         respStatusCode: successStatusCode,
-        respData: JSON.stringify(respUser, null, '  ')
+        respData: JSON.stringify(respUser, null, '  '),
       };
     } catch (error) {
       return {
         respStatusCode: 500,
-        respData: 'Oops! Something went wrong. Try again'
+        respData: 'Oops! Something went wrong. Try again',
       };
     }
   }
