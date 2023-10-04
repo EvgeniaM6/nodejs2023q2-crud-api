@@ -10,4 +10,4 @@ export interface TUser extends IUserRequest {
 
 export type TUsersDatabase = {
   usersArray: TUser[];
-}
+};
