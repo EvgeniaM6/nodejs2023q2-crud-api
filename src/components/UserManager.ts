@@ -1,14 +1,22 @@
 import http from 'http';
 import { v4, validate } from 'uuid';
-import { writeFile } from 'fs/promises';
 import { IUserRequest, TResponse, TUser, TUsersDatabase } from '../models';
 import { getRequestBody } from '../utils';
+import { DbManager } from './DbManager';
 
 export class UserManager {
-  private dbPath: string;
+  private dbManager;
+  private unsuccessResp = {
+    respStatusCode: 500,
+    respData: 'Oops! Something went wrong. Try again',
+  };
 
   constructor(dbPath: string) {
-    this.dbPath = dbPath;
+    this.dbManager = new DbManager(dbPath);
+  }
+
+  public async getUsers(): Promise<TUsersDatabase | null> {
+    return await this.dbManager.getDatabase();
   }
 
   public async createUser(request: http.IncomingMessage): Promise<TResponse> {
@@ -25,7 +33,11 @@ export class UserManager {
       };
     }
 
-    const id: string = this.getNewId();
+    const id: string = await this.getNewId();
+    if (!id) {
+      return this.unsuccessResp;
+    }
+
     const newUserData: TUser = { id, username, age, hobbies };
 
     const respObj: TResponse = await this.addUserToDatabase(newUserData);
@@ -33,10 +45,14 @@ export class UserManager {
   }
 
   private async addUserToDatabase(newUserData: TUser): Promise<TResponse> {
-    const users: TUsersDatabase = require(this.dbPath);
+    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+    if (!users) {
+      return this.unsuccessResp;
+    }
+
     users.usersArray.push(newUserData);
 
-    return await this.rewriteDataBase(users, newUserData, 201);
+    return await this.dbManager.rewriteDataBase(users, newUserData, 201);
   }
 
   private checkBodyFields(username: string, age: number, hobbies: string[]): boolean {
@@ -59,8 +75,13 @@ export class UserManager {
     return true;
   }
 
-  private getNewId(): string {
-    const users: TUsersDatabase = require(this.dbPath);
+  private async getNewId(): Promise<string> {
+    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+
+    if (!users) {
+      return '';
+    }
+
     const { usersArray } = users;
     let newId: string;
 
@@ -71,7 +92,7 @@ export class UserManager {
     return newId;
   }
 
-  public getUserById(id: string): TResponse {
+  public async getUserById(id: string): Promise<TResponse> {
     if (!validate(id)) {
       return {
         respStatusCode: 400,
@@ -79,7 +100,12 @@ export class UserManager {
       };
     }
 
-    const users: TUsersDatabase = require(this.dbPath);
+    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+
+    if (!users) {
+      return this.unsuccessResp;
+    }
+
     const userData: TUser | undefined = users.usersArray.find((user) => user.id === id);
 
     if (!userData) {
@@ -96,7 +122,7 @@ export class UserManager {
   }
 
   public async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
-    const userResp: TResponse = this.getUserById(id);
+    const userResp: TResponse = await this.getUserById(id);
     if (userResp.respStatusCode !== 200) {
       return userResp;
     }
@@ -105,7 +131,8 @@ export class UserManager {
     const dataObj: IUserRequest = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
 
-    const users: TUsersDatabase = require(this.dbPath);
+    const users: TUsersDatabase = Object.assign({}, this.dbManager.cachedDb);
+
     const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
 
     const userData: TUser = users.usersArray[idxUser];
@@ -120,38 +147,19 @@ export class UserManager {
     }
 
     users.usersArray[idxUser] = userData;
-    return await this.rewriteDataBase(users, userData, 200);
+    return await this.dbManager.rewriteDataBase(users, userData, 200);
   }
 
   public async deleteUser(id: string): Promise<TResponse> {
-    const userResp: TResponse = this.getUserById(id);
+    const userResp: TResponse = await this.getUserById(id);
     if (userResp.respStatusCode !== 200) {
       return userResp;
     }
 
-    const users: TUsersDatabase = require(this.dbPath);
+    const users: TUsersDatabase = Object.assign({}, this.dbManager.cachedDb);
     const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
     const [deletedUser] = users.usersArray.splice(idxUser, 1);
 
-    return await this.rewriteDataBase(users, deletedUser, 204);
-  }
-
-  private async rewriteDataBase(
-    users: TUsersDatabase,
-    respUser: TUser,
-    successStatusCode: number
-  ): Promise<TResponse> {
-    try {
-      await writeFile(this.dbPath, JSON.stringify(users, null, '  '));
-      return {
-        respStatusCode: successStatusCode,
-        respData: JSON.stringify(respUser, null, '  '),
-      };
-    } catch (error) {
-      return {
-        respStatusCode: 500,
-        respData: 'Oops! Something went wrong. Try again',
-      };
-    }
+    return await this.dbManager.rewriteDataBase(users, deletedUser, 204);
   }
 }

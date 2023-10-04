@@ -1,5 +1,5 @@
 import http from 'http';
-import { TResponse } from '../models';
+import { TResponse, TUsersDatabase } from '../models';
 import { UserManager } from './UserManager';
 import path from 'path';
 
@@ -29,11 +29,11 @@ export class AppController {
     const isTwoUrlParts = urlPartsAmount === 2;
 
     if (isTwoUrlParts && method === 'GET') {
-      return this.getUsers();
+      return await this.getUsers();
     }
 
     if (!isTwoUrlParts && method === 'GET') {
-      return this.getUserById(urlPartsArr[2]);
+      return await this.getUserById(urlPartsArr[2]);
     }
 
     if (isTwoUrlParts && method === 'POST') {
@@ -51,8 +51,14 @@ export class AppController {
     return respForWrongReq;
   }
 
-  private getUsers(): TResponse {
-    const users = require(this.dbPath);
+  private async getUsers(): Promise<TResponse> {
+    const users: TUsersDatabase | null = await this.userManager.getUsers();
+    if (!users) {
+      return {
+        respStatusCode: 500,
+        respData: 'Oops! Something went wrong. Try again',
+      };
+    }
 
     return {
       respStatusCode: 200,
@@ -64,8 +70,8 @@ export class AppController {
     return await this.userManager.createUser(request);
   }
 
-  private getUserById(id: string): TResponse {
-    return this.userManager.getUserById(id);
+  private async getUserById(id: string): Promise<TResponse> {
+    return await this.userManager.getUserById(id);
   }
 
   private async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
