@@ -1,12 +1,3 @@
 {
-  "usersArray": [
-    {
-      "id": "5db46112-e1db-4ce0-b7f6-5321fcc237b1",
-      "username": "Max",
-      "age": 30,
-      "hobbies": [
-        "sport"
-      ]
-    }
-  ]
+  "usersArray": []
 }

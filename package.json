@@ -9,7 +9,7 @@
     "start": "webpack serve --open",
     "prod": "webpack --mode production --config webpack.config.js",
     "dev": "webpack --mode development --config webpack.config.js",
-    "test": "jest --collect-coverage"
+    "test": "jest"
   },
   "keywords": [],
   "author": "EvgeniaM6",

@@ -128,7 +128,7 @@ export class UserManager {
     }
     const body: string = await getRequestBody(request);
 
-    const dataObj: IUserRequest = JSON.parse(body);
+    const dataObj: Partial<IUserRequest> = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
 
     const users: TUsersDatabase = Object.assign({}, this.dbManager.cachedDb);
