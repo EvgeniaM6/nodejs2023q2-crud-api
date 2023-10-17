@@ -2,6 +2,7 @@ import http from 'http';
 import { ResponseData, UsersDatabase } from '../models';
 import { UserManager } from './UserManager';
 import path from 'path';
+import { REQUEST_METHODS, RESPONSE_STATUS, SERVER_SIDE_ERR_RESP } from '../constants';
 
 export class AppController {
   private dbPath: string = path.resolve(__dirname, '../database/users.json');
@@ -11,7 +12,7 @@ export class AppController {
     const { url, method } = request;
 
     const respForWrongReq: ResponseData = {
-      respStatusCode: 404,
+      respStatusCode: RESPONSE_STATUS.NotFound,
       respData: 'Error. Wrong request',
     };
 
@@ -28,23 +29,23 @@ export class AppController {
 
     const isTwoUrlParts: boolean = urlPartsAmount === 2;
 
-    if (isTwoUrlParts && method === 'GET') {
+    if (isTwoUrlParts && method === REQUEST_METHODS.GET) {
       return await this.getUsers();
     }
 
-    if (!isTwoUrlParts && method === 'GET') {
+    if (!isTwoUrlParts && method === REQUEST_METHODS.GET) {
       return await this.getUserById(urlPartsArr[2]);
     }
 
-    if (isTwoUrlParts && method === 'POST') {
+    if (isTwoUrlParts && method === REQUEST_METHODS.POST) {
       return await this.createUser(request);
     }
 
-    if (!isTwoUrlParts && method === 'PUT') {
+    if (!isTwoUrlParts && method === REQUEST_METHODS.PUT) {
       return await this.changeUser(urlPartsArr[2], request);
     }
 
-    if (!isTwoUrlParts && method === 'DELETE') {
+    if (!isTwoUrlParts && method === REQUEST_METHODS.DELETE) {
       return await this.deleteUser(urlPartsArr[2]);
     }
 
@@ -54,14 +55,11 @@ export class AppController {
   private async getUsers(): Promise<ResponseData> {
     const users: UsersDatabase | null = await this.userManager.getUsers();
     if (!users) {
-      return {
-        respStatusCode: 500,
-        respData: 'Oops! Something went wrong. Try again',
-      };
+      return SERVER_SIDE_ERR_RESP;
     }
 
     return {
-      respStatusCode: 200,
+      respStatusCode: RESPONSE_STATUS.Ok,
       respData: JSON.stringify(users.usersArray, null, '  '),
     };
   }

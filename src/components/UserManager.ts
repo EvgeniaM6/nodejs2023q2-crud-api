@@ -3,13 +3,10 @@ import { v4, validate } from 'uuid';
 import { UserRequest, ResponseData, User, UsersDatabase } from '../models';
 import { getRequestBody } from '../utils';
 import { DbManager } from './DbManager';
+import { RESPONSE_STATUS, SERVER_SIDE_ERR_RESP } from '../constants';
 
 export class UserManager {
   private dbManager: DbManager;
-  private unsuccessResp: ResponseData = {
-    respStatusCode: 500,
-    respData: 'Oops! Something went wrong. Try again',
-  };
 
   constructor(dbPath: string) {
     this.dbManager = new DbManager(dbPath);
@@ -28,14 +25,14 @@ export class UserManager {
     const isCorrectReq: boolean = this.checkBodyFields(username, age, hobbies);
     if (!isCorrectReq) {
       return {
-        respStatusCode: 400,
+        respStatusCode: RESPONSE_STATUS.InvalidField,
         respData: 'Error. Request body does not contain required fields',
       };
     }
 
     const id: string = await this.getNewId();
     if (!id) {
-      return this.unsuccessResp;
+      return SERVER_SIDE_ERR_RESP;
     }
 
     const newUserData: User = { id, username, age, hobbies };
@@ -47,12 +44,12 @@ export class UserManager {
   private async addUserToDatabase(newUserData: User): Promise<ResponseData> {
     const users: UsersDatabase | null = await this.dbManager.getDatabase();
     if (!users) {
-      return this.unsuccessResp;
+      return SERVER_SIDE_ERR_RESP;
     }
 
     users.usersArray.push(newUserData);
 
-    return await this.dbManager.rewriteDataBase(users, newUserData, 201);
+    return await this.dbManager.rewriteDataBase(users, newUserData, RESPONSE_STATUS.Created);
   }
 
   private checkBodyFields(username: string, age: number, hobbies: string[]): boolean {
@@ -95,7 +92,7 @@ export class UserManager {
   public async getUserById(id: string): Promise<ResponseData> {
     if (!validate(id)) {
       return {
-        respStatusCode: 400,
+        respStatusCode: RESPONSE_STATUS.InvalidField,
         respData: `User id ${id} is invalid`,
       };
     }
@@ -103,27 +100,27 @@ export class UserManager {
     const users: UsersDatabase | null = await this.dbManager.getDatabase();
 
     if (!users) {
-      return this.unsuccessResp;
+      return SERVER_SIDE_ERR_RESP;
     }
 
     const userData: User | undefined = users.usersArray.find((user: User) => user.id === id);
 
     if (!userData) {
       return {
-        respStatusCode: 404,
+        respStatusCode: RESPONSE_STATUS.NotFound,
         respData: `Record with id ${id} doesn't exist`,
       };
     }
 
     return {
-      respStatusCode: 200,
+      respStatusCode: RESPONSE_STATUS.Ok,
       respData: JSON.stringify(userData, null, '  '),
     };
   }
 
   public async changeUser(id: string, request: http.IncomingMessage): Promise<ResponseData> {
     const userResp: ResponseData = await this.getUserById(id);
-    if (userResp.respStatusCode !== 200) {
+    if (userResp.respStatusCode !== RESPONSE_STATUS.Ok) {
       return userResp;
     }
     const body: string = await getRequestBody(request);
@@ -147,12 +144,12 @@ export class UserManager {
     }
 
     users.usersArray[idxUser] = userData;
-    return await this.dbManager.rewriteDataBase(users, userData, 200);
+    return await this.dbManager.rewriteDataBase(users, userData, RESPONSE_STATUS.Ok);
   }
 
   public async deleteUser(id: string): Promise<ResponseData> {
     const userResp: ResponseData = await this.getUserById(id);
-    if (userResp.respStatusCode !== 200) {
+    if (userResp.respStatusCode !== RESPONSE_STATUS.Ok) {
       return userResp;
     }
 
@@ -160,6 +157,6 @@ export class UserManager {
     const idxUser: number = users.usersArray.findIndex((user: User) => user.id === id);
     const [deletedUser] = users.usersArray.splice(idxUser, 1);
 
-    return await this.dbManager.rewriteDataBase(users, deletedUser, 204);
+    return await this.dbManager.rewriteDataBase(users, deletedUser, RESPONSE_STATUS.Deleted);
   }
 }

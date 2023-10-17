@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { writeFile } from 'fs/promises';
 import { ResponseData, User, UsersDatabase } from '../models';
+import { SERVER_SIDE_ERR_RESP } from '../constants';
 
 export class DbManager {
   public cachedDb: UsersDatabase | null = null;
@@ -48,10 +49,7 @@ export class DbManager {
         respData: JSON.stringify(respUser, null, '  '),
       };
     } catch (error) {
-      return {
-        respStatusCode: 500,
-        respData: 'Oops! Something went wrong. Try again',
-      };
+      return SERVER_SIDE_ERR_RESP;
     }
   }
 }

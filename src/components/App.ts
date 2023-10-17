@@ -3,14 +3,13 @@ import process from 'process';
 import 'dotenv/config';
 import { AppController } from './AppController';
 import { ResponseData } from '../models';
+import { HOSTNAME } from '../constants';
 
 export class App {
   appController = new AppController();
 
   init(port: number): void {
-    const hostname = '127.0.0.1';
-
-    const server = http.createServer(
+    const server: http.Server = http.createServer(
       async (req: http.IncomingMessage, res: http.ServerResponse): Promise<void> => {
         const resObj: ResponseData = await this.appController.getResponseData(req);
         const { respData, respStatusCode } = resObj;
@@ -20,8 +19,8 @@ export class App {
       }
     );
 
-    server.listen(port, hostname, () => {
-      console.log(`Server running at http://${hostname}:${port}/`);
+    server.listen(port, HOSTNAME, () => {
+      console.log(`Server running at http://${HOSTNAME}:${port}/`);
     });
 
     process.on('SIGINT', () => {

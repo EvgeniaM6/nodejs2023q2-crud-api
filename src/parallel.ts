@@ -2,11 +2,11 @@ import { availableParallelism } from 'os';
 import cluster, { Worker } from 'cluster';
 import http from 'http';
 import { App } from './components/App';
+import { HOSTNAME } from './constants';
 
 const availParallelism: number = availableParallelism();
 
 const port: number = Number(process.env.PORT) || 4000;
-const hostname = '127.0.0.1';
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
@@ -21,7 +21,7 @@ if (cluster.isPrimary) {
       currentPort = currentPort === port + availParallelism - 1 ? port + 1 : currentPort + 1;
 
       const request: http.ClientRequest = http.request(
-        { hostname, port: currentPort, path: req.url, method: req.method },
+        { hostname: HOSTNAME, port: currentPort, path: req.url, method: req.method },
         (response) => {
           if (response.statusCode) {
             res.statusCode = response.statusCode;
@@ -31,12 +31,12 @@ if (cluster.isPrimary) {
       );
 
       req.pipe(request);
-      console.log(`Request send to ${hostname}:${currentPort}`);
+      console.log(`Request send to ${HOSTNAME}:${currentPort}`);
     }
   );
 
   mainServer.listen(port, () => {
-    console.info(`Load Balancer running at http://${hostname}:${port}`);
+    console.info(`Load Balancer running at http://${HOSTNAME}:${port}`);
   });
 
   process.on('SIGINT', () => {
