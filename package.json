@@ -6,6 +6,7 @@
   "scripts": {
     "start:dev": "nodemon src/index.ts",
     "start:prod": "webpack --mode production --config webpack.config.js && nodemon dist/script/main.js",
+    "start:multi": "ts-node src/parallel.ts",
     "start": "webpack serve --open",
     "prod": "webpack --mode production --config webpack.config.js",
     "dev": "webpack --mode development --config webpack.config.js",
