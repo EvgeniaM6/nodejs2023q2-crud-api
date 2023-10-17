@@ -1,12 +1,12 @@
 import http from 'http';
 import { v4, validate } from 'uuid';
-import { IUserRequest, TResponse, TUser, TUsersDatabase } from '../models';
+import { UserRequest, ResponseData, User, UsersDatabase } from '../models';
 import { getRequestBody } from '../utils';
 import { DbManager } from './DbManager';
 
 export class UserManager {
-  private dbManager;
-  private unsuccessResp = {
+  private dbManager: DbManager;
+  private unsuccessResp: ResponseData = {
     respStatusCode: 500,
     respData: 'Oops! Something went wrong. Try again',
   };
@@ -15,17 +15,17 @@ export class UserManager {
     this.dbManager = new DbManager(dbPath);
   }
 
-  public async getUsers(): Promise<TUsersDatabase | null> {
+  public async getUsers(): Promise<UsersDatabase | null> {
     return await this.dbManager.getDatabase();
   }
 
-  public async createUser(request: http.IncomingMessage): Promise<TResponse> {
+  public async createUser(request: http.IncomingMessage): Promise<ResponseData> {
     const body: string = await getRequestBody(request);
 
-    const dataObj: IUserRequest = JSON.parse(body);
+    const dataObj: UserRequest = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
 
-    const isCorrectReq = this.checkBodyFields(username, age, hobbies);
+    const isCorrectReq: boolean = this.checkBodyFields(username, age, hobbies);
     if (!isCorrectReq) {
       return {
         respStatusCode: 400,
@@ -38,14 +38,14 @@ export class UserManager {
       return this.unsuccessResp;
     }
 
-    const newUserData: TUser = { id, username, age, hobbies };
+    const newUserData: User = { id, username, age, hobbies };
 
-    const respObj: TResponse = await this.addUserToDatabase(newUserData);
+    const respObj: ResponseData = await this.addUserToDatabase(newUserData);
     return respObj;
   }
 
-  private async addUserToDatabase(newUserData: TUser): Promise<TResponse> {
-    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+  private async addUserToDatabase(newUserData: User): Promise<ResponseData> {
+    const users: UsersDatabase | null = await this.dbManager.getDatabase();
     if (!users) {
       return this.unsuccessResp;
     }
@@ -67,7 +67,7 @@ export class UserManager {
       return false;
     }
 
-    const isArrOfStrings: boolean = hobbies.every((hobby) => typeof hobby === 'string');
+    const isArrOfStrings: boolean = hobbies.every((hobby: unknown) => typeof hobby === 'string');
     if (!isArrOfStrings) {
       return false;
     }
@@ -76,7 +76,7 @@ export class UserManager {
   }
 
   private async getNewId(): Promise<string> {
-    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+    const users: UsersDatabase | null = await this.dbManager.getDatabase();
 
     if (!users) {
       return '';
@@ -87,12 +87,12 @@ export class UserManager {
 
     do {
       newId = v4();
-    } while (usersArray.some((user) => user.id === newId));
+    } while (usersArray.some((user: User) => user.id === newId));
 
     return newId;
   }
 
-  public async getUserById(id: string): Promise<TResponse> {
+  public async getUserById(id: string): Promise<ResponseData> {
     if (!validate(id)) {
       return {
         respStatusCode: 400,
@@ -100,13 +100,13 @@ export class UserManager {
       };
     }
 
-    const users: TUsersDatabase | null = await this.dbManager.getDatabase();
+    const users: UsersDatabase | null = await this.dbManager.getDatabase();
 
     if (!users) {
       return this.unsuccessResp;
     }
 
-    const userData: TUser | undefined = users.usersArray.find((user) => user.id === id);
+    const userData: User | undefined = users.usersArray.find((user) => user.id === id);
 
     if (!userData) {
       return {
@@ -121,21 +121,21 @@ export class UserManager {
     };
   }
 
-  public async changeUser(id: string, request: http.IncomingMessage): Promise<TResponse> {
-    const userResp: TResponse = await this.getUserById(id);
+  public async changeUser(id: string, request: http.IncomingMessage): Promise<ResponseData> {
+    const userResp: ResponseData = await this.getUserById(id);
     if (userResp.respStatusCode !== 200) {
       return userResp;
     }
     const body: string = await getRequestBody(request);
 
-    const dataObj: Partial<IUserRequest> = JSON.parse(body);
+    const dataObj: Partial<UserRequest> = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
 
-    const users: TUsersDatabase = Object.assign({}, this.dbManager.cachedDb);
+    const users: UsersDatabase = Object.assign({}, this.dbManager.cachedDb);
 
-    const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
+    const idxUser: number = users.usersArray.findIndex((user: User) => user.id === id);
 
-    const userData: TUser = users.usersArray[idxUser];
+    const userData: User = users.usersArray[idxUser];
     if (username) {
       userData.username = username;
     }
@@ -150,13 +150,13 @@ export class UserManager {
     return await this.dbManager.rewriteDataBase(users, userData, 200);
   }
 
-  public async deleteUser(id: string): Promise<TResponse> {
-    const userResp: TResponse = await this.getUserById(id);
+  public async deleteUser(id: string): Promise<ResponseData> {
+    const userResp: ResponseData = await this.getUserById(id);
     if (userResp.respStatusCode !== 200) {
       return userResp;
     }
 
-    const users: TUsersDatabase = Object.assign({}, this.dbManager.cachedDb);
+    const users: UsersDatabase = Object.assign({}, this.dbManager.cachedDb);
     const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
     const [deletedUser] = users.usersArray.splice(idxUser, 1);
 

@@ -1,32 +1,34 @@
 import fs from 'fs';
 import { writeFile } from 'fs/promises';
-import { TResponse, TUser, TUsersDatabase } from '../models';
+import { ResponseData, User, UsersDatabase } from '../models';
 
 export class DbManager {
-  public cachedDb: TUsersDatabase | null = null;
+  public cachedDb: UsersDatabase | null = null;
   private dbPath: string;
 
   constructor(dbPath: string) {
     this.dbPath = dbPath;
   }
 
-  public async getDatabase(): Promise<TUsersDatabase | null> {
-    const allUsersPromise: Promise<TUsersDatabase | null> = new Promise((res) => {
-      fs.readFile(this.dbPath, (err, data) => {
-        if (err) {
-          res(null);
-        }
+  public async getDatabase(): Promise<UsersDatabase | null> {
+    const allUsersPromise: Promise<UsersDatabase | null> = new Promise(
+      (res: (value: UsersDatabase | null) => void) => {
+        fs.readFile(this.dbPath, (err: NodeJS.ErrnoException | null, data: Buffer) => {
+          if (err) {
+            res(null);
+          }
 
-        res(JSON.parse(data.toString()));
-      });
-    });
+          res(JSON.parse(data.toString()));
+        });
+      }
+    );
 
-    const allUsers = await allUsersPromise;
+    const allUsers: UsersDatabase | null = await allUsersPromise;
     this.cacheDb(allUsers);
     return allUsers;
   }
 
-  private cacheDb(allUsersPromise: TUsersDatabase | null): void {
+  private cacheDb(allUsersPromise: UsersDatabase | null): void {
     if (!allUsersPromise) {
       return;
     }
@@ -35,10 +37,10 @@ export class DbManager {
   }
 
   public async rewriteDataBase(
-    users: TUsersDatabase,
-    respUser: TUser,
+    users: UsersDatabase,
+    respUser: User,
     successStatusCode: number
-  ): Promise<TResponse> {
+  ): Promise<ResponseData> {
     try {
       await writeFile(this.dbPath, JSON.stringify(users, null, '  '));
       return {

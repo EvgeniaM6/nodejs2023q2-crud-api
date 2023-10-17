@@ -2,6 +2,7 @@ import http from 'http';
 import process from 'process';
 import 'dotenv/config';
 import { AppController } from './AppController';
+import { ResponseData } from '../models';
 
 export class App {
   appController = new AppController();
@@ -10,8 +11,8 @@ export class App {
     const hostname = '127.0.0.1';
 
     const server = http.createServer(
-      async (req: http.IncomingMessage, res: http.ServerResponse) => {
-        const resObj = await this.appController.getResponseData(req);
+      async (req: http.IncomingMessage, res: http.ServerResponse): Promise<void> => {
+        const resObj: ResponseData = await this.appController.getResponseData(req);
         const { respData, respStatusCode } = resObj;
         res.statusCode = respStatusCode;
         res.setHeader('Content-Type', 'text/plain');

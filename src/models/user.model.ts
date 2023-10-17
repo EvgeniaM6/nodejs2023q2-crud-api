@@ -1,17 +1,17 @@
-export interface IUserRequest {
+export interface UserRequest {
   username: string;
   age: number;
   hobbies: string[];
 }
 
-export interface TUser extends IUserRequest {
+export interface User extends UserRequest {
   id: string;
 }
 
-export type TUsersDatabase = {
-  usersArray: TUser[];
+export type UsersDatabase = {
+  usersArray: User[];
 };
 
-export interface IWrongUserRequest extends Omit<IUserRequest, 'hobbies'> {
+export interface WrongUserRequest extends Omit<UserRequest, 'hobbies'> {
   hobbies: number[];
 }

@@ -1,4 +1,4 @@
-import { TResponse } from './response.model';
-import { IUserRequest, IWrongUserRequest, TUser, TUsersDatabase } from './user.model';
+import { ResponseData } from './response.model';
+import { UserRequest, WrongUserRequest, User, UsersDatabase } from './user.model';
 
-export { TUser, TResponse, IUserRequest, TUsersDatabase, IWrongUserRequest };
+export { User, ResponseData, UserRequest, UsersDatabase, WrongUserRequest };
