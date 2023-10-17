@@ -17,7 +17,7 @@ if (cluster.isPrimary) {
   }
 
   const mainServer: http.Server = http.createServer(
-    async (req: http.IncomingMessage, res: http.ServerResponse) => {
+    async (req: http.IncomingMessage, res: http.ServerResponse): Promise<void> => {
       currentPort = currentPort === port + availParallelism - 1 ? port + 1 : currentPort + 1;
 
       const request: http.ClientRequest = http.request(

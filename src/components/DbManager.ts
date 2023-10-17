@@ -12,7 +12,7 @@ export class DbManager {
 
   public async getDatabase(): Promise<UsersDatabase | null> {
     const allUsersPromise: Promise<UsersDatabase | null> = new Promise(
-      (res: (value: UsersDatabase | null) => void) => {
+      (res: (value: UsersDatabase | null) => void): void => {
         fs.readFile(this.dbPath, (err: NodeJS.ErrnoException | null, data: Buffer) => {
           if (err) {
             res(null);

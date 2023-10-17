@@ -106,7 +106,7 @@ export class UserManager {
       return this.unsuccessResp;
     }
 
-    const userData: User | undefined = users.usersArray.find((user) => user.id === id);
+    const userData: User | undefined = users.usersArray.find((user: User) => user.id === id);
 
     if (!userData) {
       return {
@@ -157,7 +157,7 @@ export class UserManager {
     }
 
     const users: UsersDatabase = Object.assign({}, this.dbManager.cachedDb);
-    const idxUser: number = users.usersArray.findIndex((user) => user.id === id);
+    const idxUser: number = users.usersArray.findIndex((user: User) => user.id === id);
     const [deletedUser] = users.usersArray.splice(idxUser, 1);
 
     return await this.dbManager.rewriteDataBase(users, deletedUser, 204);
