@@ -57,14 +57,22 @@ export class UserManager {
       return false;
     }
 
-    const isUsernameString: boolean = typeof username === 'string';
-    const isAgeNumber: boolean = typeof age === 'number';
-    const isHobbiesArr: boolean = Array.isArray(hobbies);
+    return this.checkBodyFieldsTypes(username, age, hobbies);
+  }
+
+  private checkBodyFieldsTypes(username: unknown, age: unknown, hobbies: unknown): boolean {
+    const isUsernameString: boolean = username ? typeof username === 'string' : true;
+    const isAgeNumber: boolean = age ? typeof age === 'number' : true;
+    const isHobbiesArr: boolean = hobbies ? Array.isArray(hobbies) : true;
+
     if (!isUsernameString || !isAgeNumber || !isHobbiesArr) {
       return false;
     }
 
-    const isArrOfStrings: boolean = hobbies.every((hobby: unknown) => typeof hobby === 'string');
+    const isArrOfStrings: boolean =
+      hobbies && isHobbiesArr
+        ? (hobbies as unknown[]).every((hobby: unknown) => typeof hobby === 'string')
+        : true;
     if (!isArrOfStrings) {
       return false;
     }
@@ -127,6 +135,14 @@ export class UserManager {
 
     const dataObj: Partial<UserRequest> = JSON.parse(body);
     const { username, age, hobbies } = dataObj;
+
+    const isCorrectFieldsTypes: boolean = this.checkBodyFieldsTypes(username, age, hobbies);
+    if (!isCorrectFieldsTypes) {
+      return {
+        respStatusCode: RESPONSE_STATUS.InvalidField,
+        respData: 'Error. Request body fields does not have correct types',
+      };
+    }
 
     const users: UsersDatabase = Object.assign({}, this.dbManager.cachedDb);
 
